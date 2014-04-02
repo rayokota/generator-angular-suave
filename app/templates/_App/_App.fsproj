@@ -82,7 +82,6 @@
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Content\" />
   </ItemGroup>
   <ItemGroup>

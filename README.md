@@ -6,7 +6,7 @@ Suave is an F#-based micro-framework.  For AngularJS integration with other micr
 
 ## Installation
 
-Install [Git](http://git-scm.com), [node.js](http://nodejs.org), [NuGet](http://www.nuget.org/), and [Visual Studio](http://www.visualstudio.com/) for Windows or [Mono](http://mono-project.com/) for Linux/Mac OS X.  The development mode also requires [SQLite](http://www.sqlite.org).
+Install [Git](http://git-scm.com), [node.js](http://nodejs.org), [F#](http://fsharp.org), [NuGet](http://www.nuget.org/), and [Visual Studio](http://www.visualstudio.com/) for Windows or [Mono](http://mono-project.com/) for Linux/Mac OS X.  The development mode also requires [SQLite](http://www.sqlite.org).
 
 Install Yeoman:
 

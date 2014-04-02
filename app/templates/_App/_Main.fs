@@ -20,24 +20,24 @@ open Newtonsoft.Json.Converters
 [<CLIMutable>]
 [<JsonObject(MemberSerialization.OptIn)>]
 type <%= _.capitalize(entity.name) %> = {
-      [<AutoIncrement>]
-      [<JsonProperty(PropertyName = "id", NullValueHandling = NullValueHandling.Ignore)>]
-      mutable Id : int
-      <% _.each(entity.attrs, function (attr) { %>
-      [<JsonProperty("<%= attr.attrName %>")>]
-      mutable <%= _.capitalize(attr.attrName) %>  : <%= attr.attrImplType %><% }); %>
+  [<AutoIncrement>]
+  [<JsonProperty(PropertyName = "id", NullValueHandling = NullValueHandling.Ignore)>]
+  mutable Id : int
+  <% _.each(entity.attrs, function (attr) { %>
+  [<JsonProperty("<%= attr.attrName %>")>]
+  mutable <%= _.capitalize(attr.attrName) %>  : <%= attr.attrImplType %><% }); %>
 }<% }); %>
+
+let dbFactory =
+  let dbConnectionFactory = new OrmLiteConnectionFactory("/tmp/my.db", SqliteDialect.Provider)
+  use db = dbConnectionFactory.OpenDbConnection()<% _.each(entities, function (entity) { %>
+  db.CreateTable<<%= _.capitalize(entity.name) %>>(false)<% }); %>
+  dbConnectionFactory
 
 type CustomDateTimeConverter() =
   inherit IsoDateTimeConverter()
 
   do base.DateTimeFormat <- "yyyy-MM-dd"
-
-let dbFactory =
-     let dbConnectionFactory = new OrmLiteConnectionFactory("/tmp/my.db", SqliteDialect.Provider)
-     use db = dbConnectionFactory.OpenDbConnection()<% _.each(entities, function (entity) { %>
-     db.CreateTable<<%= _.capitalize(entity.name) %>>(false)<% }); %>
-     dbConnectionFactory
 
 let converters : JsonConverter[] = [| CustomDateTimeConverter() |]
 
@@ -93,6 +93,16 @@ let <%= entity.name %>Part : WebPart =
         let num = db.Delete<<%= _.capitalize(entity.name) %>>(fun r -> r.Id = id)
         Suave.Http.no_content);
   ]<% }); %>
+
+let local_file (fileName : string) (root_path : string) =
+  let calculated_path = Path.Combine(root_path, fileName.TrimStart([| Path.DirectorySeparatorChar; Path.AltDirectorySeparatorChar |]).Replace('/', Path.DirectorySeparatorChar))
+  if calculated_path = Path.GetFullPath(calculated_path) then
+    if calculated_path.StartsWith root_path then
+      calculated_path
+    else raise <| Exception("File canonalization issue.")
+  else raise <| Exception("File canonalization issue.")
+
+let browse : WebPart = warbler (fun {request = r; runtime = q } -> file (local_file r.url q.home_directory))
 
 choose [
   Console.OpenStandardOutput() |> log >>= never;

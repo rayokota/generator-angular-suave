@@ -79,7 +79,7 @@ let <%= entity.name %>Part : WebPart =
         row.Id <- int(db.LastInsertId())
         row));
 
-    POST >>= url_scan "/<%= baseName %>/<%= pluralize(entity.name) %>/%d"
+    PUT >>= url_scan "/<%= baseName %>/<%= pluralize(entity.name) %>/%d"
       (fun id -> request(map_json (fun (row : <%= _.capitalize(entity.name) %>) -> 
         row.Id <- id
         use db = dbFactory.OpenDbConnection()
@@ -93,16 +93,6 @@ let <%= entity.name %>Part : WebPart =
         let num = db.Delete<<%= _.capitalize(entity.name) %>>(fun r -> r.Id = id)
         Suave.Http.no_content);
   ]<% }); %>
-
-let local_file (fileName : string) (root_path : string) =
-  let calculated_path = Path.Combine(root_path, fileName.TrimStart([| Path.DirectorySeparatorChar; Path.AltDirectorySeparatorChar |]).Replace('/', Path.DirectorySeparatorChar))
-  if calculated_path = Path.GetFullPath(calculated_path) then
-    if calculated_path.StartsWith root_path then
-      calculated_path
-    else raise <| Exception("File canonalization issue.")
-  else raise <| Exception("File canonalization issue.")
-
-let browse : WebPart = warbler (fun {request = r; runtime = q } -> file (local_file r.url q.home_directory))
 
 choose [
   Console.OpenStandardOutput() |> log >>= never;

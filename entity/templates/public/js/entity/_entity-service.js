@@ -5,7 +5,6 @@ angular.module('<%= baseName %>')
     return $resource(':url/<%= baseName %>/<%= pluralize(name) %>/:id', {}, {
       'query': { method: 'GET', isArray: true},
       'get': { method: 'GET'},
-      //'update': { method: 'PUT'}
-      'update': { method: 'POST'}
+      'update': { method: 'PUT'}
     });
   }]);

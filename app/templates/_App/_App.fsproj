@@ -72,10 +72,10 @@
       <HintPath>..\packages\System.Data.SQLite.1.0.91.0\lib\net40\System.Data.SQLite.dll</HintPath>
     </Reference><% }; %>
     <Reference Include="Suave">
-      <HintPath>..\packages\Suave.0.4.0\lib\suave.dll</HintPath>
+      <HintPath>..\packages\Suave.0.5.0\lib\suave.dll</HintPath>
     </Reference>
     <Reference Include="ManagedOpenSsl">
-      <HintPath>..\packages\Suave.0.4.0\lib\ManagedOpenSsl.dll</HintPath>
+      <HintPath>..\packages\Suave.0.5.0\lib\ManagedOpenSsl.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

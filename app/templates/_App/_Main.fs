@@ -25,7 +25,7 @@ type <%= _.capitalize(entity.name) %> = {
   mutable Id : int
   <% _.each(entity.attrs, function (attr) { %>
   [<JsonProperty("<%= attr.attrName %>")>]
-  mutable <%= _.capitalize(attr.attrName) %>  : <%= attr.attrImplType %><% }); %>
+  mutable <%= _.capitalize(attr.attrName) %> : <%= attr.attrImplType %><% }); %>
 }<% }); %>
 
 let dbFactory =

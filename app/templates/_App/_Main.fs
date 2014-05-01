@@ -1,10 +1,15 @@
 ﻿open System
 open System.Net
 
+open Suave
 open Suave.Web
 open Suave.Http
+open Suave.Http.Applicatives
+open Suave.Http.Files
+open Suave.Http.Successful
 open Suave.Types
 open Suave.Session
+open Suave.Log
 open System.IO
 open System.Text
 
@@ -28,8 +33,10 @@ type <%= _.capitalize(entity.name) %> = {
   mutable <%= _.capitalize(attr.attrName) %> : <%= attr.attrImplType %><% }); %>
 }<% }); %>
 
+let logger = Loggers.sane_defaults_for Debug
+
 let dbFactory =
-  let dbConnectionFactory = new OrmLiteConnectionFactory("/tmp/my.db", SqliteDialect.Provider)
+  let dbConnectionFactory = new OrmLiteConnectionFactory("my.db", SqliteDialect.Provider)
   use db = dbConnectionFactory.OpenDbConnection()<% _.each(entities, function (entity) { %>
   db.CreateTable<<%= _.capitalize(entity.name) %>>(false)<% }); %>
   dbConnectionFactory
@@ -55,7 +62,7 @@ let from_json<'a> (bytes:byte []) =
 ///   url "/path" >>= request (map_json some_function);
 ///
 let map_json f (r : Suave.Types.HttpRequest) =
-  f (from_json(r.raw_form)) |> to_json |> Suave.Http.ok
+  f (from_json(r.raw_form)) |> to_json |> Successful.ok
 
 <% _.each(entities, function (entity) { %>
 let <%= entity.name %>Part : WebPart =
@@ -64,13 +71,13 @@ let <%= entity.name %>Part : WebPart =
       (fun _ -> 
         use db = dbFactory.OpenDbConnection()
         let rows = db.Select<<%= _.capitalize(entity.name) %>>()
-        to_json rows |> Suave.Http.ok));
+        to_json rows |> Successful.ok));
 
     GET >>= url_scan "/<%= baseName %>/<%= pluralize(entity.name) %>/%d"
       (fun id -> 
         use db = dbFactory.OpenDbConnection()
         let row = db.Single<<%= _.capitalize(entity.name) %>>(fun r -> r.Id = id)
-        to_json row |> Suave.Http.ok);
+        to_json row |> Successful.ok);
 
     POST >>= url "/<%= baseName %>/<%= pluralize(entity.name) %>" >>= request(map_json 
       (fun (row : <%= _.capitalize(entity.name) %>) -> 
@@ -91,16 +98,16 @@ let <%= entity.name %>Part : WebPart =
       (fun id -> 
         use db = dbFactory.OpenDbConnection()
         let num = db.Delete<<%= _.capitalize(entity.name) %>>(fun r -> r.Id = id)
-        Suave.Http.no_content);
+        Successful.no_content);
   ]<% }); %>
 
 choose [
-  Console.OpenStandardOutput() |> log >>= never;
+  log logger log_format >>= never
   GET >>= url "/" >>= browse_file "index.html";
   <% _.each(entities, function (entity) { %>
   <%= entity.name %>Part; <% }); %>
   GET >>= browse; //serves file if it exists
-  NOT_FOUND "Found no handlers"
+  RequestErrors.NOT_FOUND "Found no handlers"
   ]
   |> web_server
       { bindings =
@@ -111,7 +118,8 @@ choose [
       ; ct               = Async.DefaultCancellationToken
       ; buffer_size      = 2048
       ; max_ops          = 100
-      ; mime_types_map   = default_mime_types_map
+      ; mime_types_map   = Writers.default_mime_types_map
       ; home_folder      = Some(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Content"))
-      ; compressed_files_folder = None }
+      ; compressed_files_folder = None
+      ; logger           = logger }
 
